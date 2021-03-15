@@ -32,7 +32,7 @@ class PresenceRouter:
         self.custom_presence_router = None
 
         # Check whether a custom presence router module has been configured
-        if hs.config.presence_router_module:
+        if hs.config.presence_router_module_class:
             # Initialise the module
             self.custom_presence_router = hs.config.presence_router_module_class(
                 config=hs.config.presence_router_config, module_api=hs.get_module_api()
@@ -55,7 +55,7 @@ class PresenceRouter:
         """
         if self.custom_presence_router is not None:
             # Ask the custom module
-            return self.custom_presence_router.get_users_for_states(
+            return await self.custom_presence_router.get_users_for_states(
                 state_updates=state_updates
             )
 
@@ -84,7 +84,7 @@ class PresenceRouter:
         if self.custom_presence_router is not None:
             if hasattr(self.custom_presence_router, "get_interested_users"):
                 # Ask the custom module for interested users
-                return await self.custom_presence_router.get_interested_in(
+                return await self.custom_presence_router.get_interested_users(
                     user_id=user_id
                 )
             elif hasattr(self.custom_presence_router, "get_users_for_states"):
