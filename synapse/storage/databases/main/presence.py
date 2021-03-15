@@ -188,7 +188,7 @@ class PresenceStore(SQLBaseStore):
                 "get_presence_for_all_users",
                 self.db_pool.simple_select_list_paginate_txn,
                 "presence_stream",
-                orderby="mtime",
+                orderby="stream_id",
                 start=offset,
                 limit=limit,
                 keyvalues={},

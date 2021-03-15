@@ -1942,7 +1942,7 @@ class DatabasePool:
         if order_direction not in ["ASC", "DESC"]:
             raise ValueError("order_direction must be one of 'ASC' or 'DESC'.")
 
-        where_clause = "WHERE " if filters or keyvalues else ""
+        where_clause = "WHERE " if filters or keyvalues or exclude_keyvalues else ""
         arg_list = []  # type: List[Any]
         if filters:
             where_clause += " AND ".join("%s LIKE ?" % (k,) for k in filters)
