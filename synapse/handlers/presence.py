@@ -1046,9 +1046,12 @@ class PresenceEventSource:
         #
         #   Presence -> Notifier -> PresenceEventSource -> Presence
         #
-        self.presence_router = hs.get_presence_router()
-        self.module_api = hs.get_module_api()
+        # Same with get_module_api, get_presence_router
+        #
+        #   AuthHandler -> Notifier -> PresenceEventSource -> ModuleApi -> AuthHandler
         self.get_presence_handler = hs.get_presence_handler
+        self.get_module_api = hs.get_module_api
+        self.get_presence_router = hs.get_presence_router
         self.clock = hs.get_clock()
         self.store = hs.get_datastore()
         self.state = hs.get_state_handler()
@@ -1076,7 +1079,10 @@ class PresenceEventSource:
         # sending down the rare duplicate is not a concern.
 
         with Measure(self.clock, "presence.get_new_events"):
-            if user.to_string() in self.module_api.send_full_presence_to_local_users:
+            if (
+                user.to_string()
+                in self.get_module_api().send_full_presence_to_local_users
+            ):
                 # This user has been specified by a module to receive all current, online
                 # user presence. Removing from_key and setting include_offline to false
                 # will do effectively this.
@@ -1110,7 +1116,7 @@ class PresenceEventSource:
 
             # TODO: Can we deduplicate some of the below?
 
-            # Given the requesting user, figure out which users' presence we should query
+            # Figure out which other users this user should receive updates for
             users_interested_in = await self._get_interested_in(user, explicit_room_id)
 
             # Check whether this user should see all user updates
@@ -1132,8 +1138,10 @@ class PresenceEventSource:
 
                     # TODO: This feels wildly inefficient
                     # Filter through the presence router
-                    users_to_state = await self.presence_router.get_users_for_states(
-                        users_to_state.values()
+                    users_to_state = (
+                        await self.get_presence_router().get_users_for_states(
+                            users_to_state.values()
+                        )
                     )
 
                     # We only want the mapping for the syncing user
@@ -1150,9 +1158,9 @@ class PresenceEventSource:
                     # Remove the user from the list of users to receive all presence
                     if (
                         user.to_string
-                        in self.module_api.send_full_presence_to_local_users
+                        in self.get_module_api().send_full_presence_to_local_users
                     ):
-                        self.module_api.send_full_presence_to_local_users.remove(
+                        self.get_module_api().send_full_presence_to_local_users.remove(
                             user.to_string()
                         )
 
@@ -1209,8 +1217,10 @@ class PresenceEventSource:
             )
 
         # Remove the user from the list of users to receive all presence
-        if user.to_string in self.module_api.send_full_presence_to_local_users:
-            self.module_api.send_full_presence_to_local_users.remove(user.to_string())
+        if user.to_string in self.get_module_api().send_full_presence_to_local_users:
+            self.get_module_api().send_full_presence_to_local_users.remove(
+                user.to_string()
+            )
 
         if not include_offline:
             # Filter out offline presence states
@@ -1254,7 +1264,7 @@ class PresenceEventSource:
 
         # Check with the presence router whether we should poll additional users for
         # their presence information
-        additional_users = await self.presence_router.get_interested_users(
+        additional_users = await self.get_presence_router().get_interested_users(
             user.to_string()
         )
         if additional_users == "ALL":
