@@ -53,7 +53,9 @@ class PresenceRouter:
           A dictionary of user_id -> set of UserPresenceState that the user should
           receive.
         """
-        if self.custom_presence_router is not None:
+        if self.custom_presence_router is not None and hasattr(
+            self.custom_presence_router, "get_users_for_states"
+        ):
             # Ask the custom module
             return await self.custom_presence_router.get_users_for_states(
                 state_updates=state_updates
@@ -61,9 +63,6 @@ class PresenceRouter:
 
         # Don't include any extra destinations for presence updates
         return {}
-
-    # get_interested_users is used to filter out presence up front
-    # then get_users_for_state is used as a second filter
 
     async def get_interested_users(
         self, user_id: str
@@ -81,20 +80,13 @@ class PresenceRouter:
         Returns:
             A set of user IDs to return presence updates for, or ALL to return all known updates.
         """
-        if self.custom_presence_router is not None:
-            if hasattr(self.custom_presence_router, "get_interested_users"):
-                # Ask the custom module for interested users
-                return await self.custom_presence_router.get_interested_users(
-                    user_id=user_id
-                )
-            elif hasattr(self.custom_presence_router, "get_users_for_states"):
-                # The custom module does not implement `get_interested_users`, but it does implement
-                # `get_users_for_states`. In this state, the module may find that local users do not
-                # receive all desired presence updates, as a presence update must satisfy both
-                # functions in order to reach a local user.
-                #
-                # Given this, if get_users_for_states is defined, we just return ALL here.
-                return "ALL"
+        if self.custom_presence_router is not None and hasattr(
+            self.custom_presence_router, "get_interested_users"
+        ):
+            # Ask the custom module for interested users
+            return await self.custom_presence_router.get_interested_users(
+                user_id=user_id
+            )
 
         # A custom presence router is not defined, or doesn't implement any relevant function.
         # Don't report any additional interested users.
