@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-from typing import TYPE_CHECKING, Any, Generator, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Generator, Iterable, Optional, Tuple
 
 from twisted.internet import defer
 
@@ -394,12 +394,15 @@ class ModuleApi:
 
     async def send_local_online_presence_to(self, users: Iterable[str]) -> None:
         """
-        Send all current local user presence to a set of users. Updates to remote
-        users will be sent immediately, whereas local users will receive them when
-        on their next sync attempt.
+        Forces the equivalent of a presence initial_sync for a set of local or remote
+        users. The users will receive presence for all currently online users that they
+        are considered interested in.
+
+        Updates to remote users will be sent immediately, whereas local users will receive
+        them on their next sync attempt.
         """
         for user in users:
-            if self._hs.is_mine(user):
+            if self._hs.is_mine_id(user):
                 # Modify SyncHandler._generate_sync_entry_for_presence to call
                 # presence_source.get_new_events with an empty `from_key` if
                 # that user's ID were in a list modified by ModuleApi somewhere.
@@ -408,7 +411,8 @@ class ModuleApi:
                 # Force a presence initial_sync for this user next time
                 self.send_full_presence_to_local_users.add(user)
             else:
-                # Retrieve presence state for all currently online users
+                # Retrieve presence state for currently online users that this user
+                # is considered interested in
                 presence_events = await self._presence_stream.get_new_events(
                     user, from_key=None, include_offline=False
                 )
