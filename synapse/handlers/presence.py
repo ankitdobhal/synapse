@@ -1138,14 +1138,19 @@ class PresenceEventSource:
 
                     # TODO: This feels wildly inefficient
                     # Filter through the presence router
-                    users_to_state = (
+                    users_to_state_set = (
                         await self.get_presence_router().get_users_for_states(
                             users_to_state.values()
                         )
                     )
 
                     # We only want the mapping for the syncing user
-                    presence_updates = users_to_state[user.to_string()]
+                    #
+                    # This is passed to us as a Set, but we eventually want to return a list,
+                    # so we mark the type as being potentially both.
+                    presence_updates = users_to_state_set[
+                        user.to_string()
+                    ]  # type: Iterable[UserPresenceState]
 
                     if not include_offline:
                         # Filter out offline states
@@ -1196,7 +1201,11 @@ class PresenceEventSource:
                     get_updates_counter.labels("stream").inc()
                     for other_user_id in updated_users:
                         if other_user_id in users_interested_in:
-                            interested_and_updated_users.add(other_user_id)
+                            # mypy thinks this variable could be a FrozenSet as it's possibly set
+                            # to one in the `get_entities_changed` call below, and `add()` is not
+                            # method on a FrozenSet. That doesn't affect us here though, as
+                            # `interested_and_updated_users` is clearly a set() above.
+                            interested_and_updated_users.add(other_user_id)  # type: ignore
                 else:
                     # Too many possible updates. Find all users we can see and check
                     # if any of them have changed.
