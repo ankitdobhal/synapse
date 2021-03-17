@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Dict, Iterable, Set, Union
 
 from typing_extensions import Literal
 
-from synapse.handlers.presence import UserPresenceState
+from synapse.api.presence import UserPresenceState
 
 if TYPE_CHECKING:
     from synapse.server import HomeServer
