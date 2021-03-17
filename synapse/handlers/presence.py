@@ -31,7 +31,6 @@ from typing import (
     FrozenSet,
     Iterable,
     List,
-    Literal,
     Optional,
     Set,
     Tuple,
@@ -39,7 +38,7 @@ from typing import (
 )
 
 from prometheus_client import Counter
-from typing_extensions import ContextManager
+from typing_extensions import ContextManager, Literal
 
 import synapse.metrics
 from synapse.api.constants import EventTypes, Membership, PresenceState

@@ -12,9 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Dict, Iterable, List, Literal, Optional, Set, Union
+from typing import Dict, Iterable, List, Optional, Set, Union
 
 import attr
+from typing_extensions import Literal
 
 from synapse.handlers.presence import UserPresenceState
 from synapse.module_api import ModuleApi
